@@ -14,6 +14,12 @@ class QuantumSeeding:
         self.max_qubits = int(max_qubits)
         self.verbose = verbose
         self.simulation = simulation
+        self.quantum_register = QuantumRegister(self.max_qubits)
+        self.classical_register = ClassicalRegister(self.max_qubits)
+        self.quantum_circuit = QuantumCircuit(
+            self.quantum_register, self.classical_register
+        )
+        self.quantum_computer = self.get_ibm_quantum_computer(qubits=self.max_qubits)
 
     # Define functions to simplify interactions with quantum computers
     def get_ibm_quantum_computer(self, qubits=2):
@@ -70,34 +76,19 @@ class QuantumSeeding:
             )
         return quantum_computer
 
-    def prepare_quantum_circuit(
-        self,
-        qubits=2,
-        classical_bits=2,
-    ):
-        # Create registers for the circuit
-        quantum_register = QuantumRegister(qubits)
-        classical_register = ClassicalRegister(classical_bits)
-        # Create a Quantum Circuit
-        quantum_circuit = QuantumCircuit(quantum_register, classical_register)
-        # Pick a quantum computer that has enough qubits to execute the circuit from IBM
-        # Get a quantum computer with at least the number of selected qubits for the circuit and the lowest queue, or the simulator
-        quantum_computer = self.get_ibm_quantum_computer(qubits=qubits)
-        return quantum_circuit, quantum_register, classical_register, quantum_computer
-
-    def execute_quantum_circuit(self, quantum_circuit, quantum_computer, shots=500):
-        queue_position = quantum_computer.status().pending_jobs + 1
+    def execute_quantum_circuit(self, shots=512):
+        queue_position = self.quantum_computer.status().pending_jobs + 1
         if self.verbose == True:
             print(
-                f"Your job is number {queue_position} in the queue on {quantum_computer.name()}.  Please wait..."
+                f"Your job is number {queue_position} in the queue on {self.quantum_computer.name()}.  Please wait..."
             )
         result = execute(
-            quantum_circuit, backend=quantum_computer, shots=shots
+            self.quantum_circuit, backend=self.quantum_computer, shots=shots
         ).result()
-        counts = result.get_counts(quantum_circuit)
+        counts = result.get_counts(self.quantum_circuit)
         if self.verbose == True:
             print(
-                f"{result.status} in {result.time_taken} seconds on {quantum_computer.name()}"
+                f"{result.status} in {result.time_taken} seconds on {self.quantum_computer.name()}"
             )
         try:
             highest_probable = counts.most_frequent()
@@ -106,7 +97,7 @@ class QuantumSeeding:
         if self.verbose == True:
             probability = (
                 100
-                * float(result.get_counts(quantum_circuit)[highest_probable])
+                * float(result.get_counts(self.quantum_circuit)[highest_probable])
                 / float(shots)
             )
             print(
@@ -114,35 +105,21 @@ class QuantumSeeding:
             )
         return highest_probable, result, counts
 
-    def entangle_qubits(self, quantum_circuit, quantum_register, classical_register):
+    def entangle_qubits(self):
         for i in range(self.max_qubits):
-            quantum_circuit.h(quantum_register[i])
+            self.quantum_circuit.h(self.quantum_register[i])
         for i in range(self.max_qubits - 1):
-            quantum_circuit.cx(quantum_register[i], quantum_register[i + 1])
-        quantum_circuit.measure(quantum_register, classical_register)
-        drawing = quantum_circuit.draw()
-        return quantum_circuit, drawing
+            self.quantum_circuit.cx(
+                self.quantum_register[i], self.quantum_register[i + 1]
+            )
+        self.quantum_circuit.measure(self.quantum_register, self.classical_register)
+        return self.quantum_circuit.draw()
 
     def get_seed(self):
-        (
-            quantum_circuit,
-            quantum_register,
-            classical_register,
-            quantum_computer,
-        ) = self.prepare_quantum_circuit(
-            qubits=self.max_qubits,
-            classical_bits=self.max_qubits,
-        )
-        quantum_circuit, drawing = self.entangle_qubits(
-            quantum_circuit=quantum_circuit,
-            quantum_register=quantum_register,
-            classical_register=classical_register,
-        )
+        drawing = self.entangle_qubits()
         if self.verbose == True:
             print(f"Quantum Circuit:\n{drawing}")
         highest_probable, result, counts = self.execute_quantum_circuit(
-            quantum_circuit=quantum_circuit,
-            quantum_computer=quantum_computer,
             shots=512,
         )
         seed = ""
