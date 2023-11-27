@@ -8,7 +8,7 @@ with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="quantumseeding",
-    version="0.0.3",
+    version="0.0.4",
     description="Generate really random seeds with Quantum Computers",
     long_description=long_description,
     long_description_content_type="text/markdown",
