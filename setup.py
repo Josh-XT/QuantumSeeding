@@ -6,13 +6,9 @@ this_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
-with open(os.path.join(this_directory, "requirements.txt")) as f:
-    requirements = f.read().splitlines()
-
-
 setup(
     name="quantumseeding",
-    version="0.0.2",
+    version="0.0.3",
     description="Generate really random seeds with Quantum Computers",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -20,5 +16,5 @@ setup(
     author_email="josh@devxt.com",
     packages=find_packages(),
     python_requires=">=3.10",
-    install_requires=requirements,
+    install_requires="qiskit",
 )
