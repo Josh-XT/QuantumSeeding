@@ -24,7 +24,7 @@ class QuantumSeeding:
     # Define functions to simplify interactions with quantum computers
     def get_ibm_quantum_computer(self, qubits=2):
         quantum_computer = None
-        if self.ibm_token is None:
+        if self.ibm_token is None or self.ibm_token == "YOUR_IBM_TOKEN":
             if self.verbose == True:
                 print("No IBM Token found.  Using Quantum Computer Simulator")
             self.simulation = True
